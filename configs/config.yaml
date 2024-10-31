@@ -1,0 +1,21 @@
+app:
+  name: "test"
+  version: "1.0.0"
+  port: 8080
+
+log:
+  level: "debug"
+  path: "logs"
+
+database:
+  driver: "mysql"
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "root"
+  name: "demo"
+
+jwt:
+  jwt_key: "secret"
+  issuer: "test"
+  expttl: 2592000

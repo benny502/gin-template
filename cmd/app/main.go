@@ -27,5 +27,5 @@ func main() {
 		panic(err)
 	}
 	defer cleanup()
-	app.Run(flagconf) // listen and serve on 0.0.0.0:8080
+	app.Run() // listen and serve on 0.0.0.0:8080
 }

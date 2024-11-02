@@ -10,9 +10,11 @@ import (
 	"bookmark/internal/biz"
 	"bookmark/internal/config"
 	"bookmark/internal/data"
+	"bookmark/internal/grpc"
 	"bookmark/internal/middleware"
 	"bookmark/internal/pkg/log"
 	"bookmark/internal/router"
+	"bookmark/internal/server"
 	"bookmark/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +24,7 @@ import (
 func wireApp(conf *config.Configuration, opts ...gin.OptionFunc) (*App, func(), error) {
 	engine := gin.Default(opts...)
 	auth := middleware.NewAuth(conf)
+	cors := middleware.NewCors()
 	logger, err := log.NewLogger(conf)
 	if err != nil {
 		return nil, nil, err
@@ -30,11 +33,20 @@ func wireApp(conf *config.Configuration, opts ...gin.OptionFunc) (*App, func(), 
 	if err != nil {
 		return nil, nil, err
 	}
+	classRepo := data.NewClassRepo(dataData)
+	classBiz := biz.NewClassBiz(classRepo)
+	classService := service.NewClassService(logger, classBiz)
+	itemRepo := data.NewItemRepo(dataData)
+	itemBiz := biz.NewItemBiz(itemRepo, classRepo)
+	itemService := service.NewItemService(logger, itemBiz)
 	userRepo := data.NewUserRepo(dataData)
 	userBiz := biz.NewUserBiz(userRepo, conf)
 	userService := service.NewUserService(logger, userBiz, conf)
-	routerRouter := router.NewRouter(engine, auth, userService, logger)
-	app := NewApp(engine, conf, routerRouter, logger)
+	routerRouter := router.NewRouter(engine, auth, cors, classService, itemService, userService, logger)
+	httpServer := server.NewHttpServer(engine, routerRouter, conf, logger)
+	helloService := grpc.NewHelloService()
+	grpcServer := server.NewGrpcServer(conf, helloService, logger)
+	app := NewApp(httpServer, grpcServer, conf, logger)
 	return app, func() {
 		cleanup()
 	}, nil

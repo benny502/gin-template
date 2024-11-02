@@ -92,4 +92,4 @@ func (d *Data) mysql() error {
 	return nil
 }
 
-var ProviderSet = wire.NewSet(NewData, NewUserRepo)
+var ProviderSet = wire.NewSet(NewData, NewUserRepo, NewClassRepo, NewItemRepo)

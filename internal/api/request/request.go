@@ -4,6 +4,8 @@ import (
 	cErr "bookmark/internal/pkg/error"
 	"regexp"
 
+	"net/http"
+
 	"github.com/go-playground/validator/v10"
 )
 
@@ -31,7 +33,7 @@ func GetError(request interface{}, err error) *cErr.Error {
 				field = reg.ReplaceAllString(field, ".*")
 
 				if message, exist := request.(Validator).GetMessages()[field+"."+v.Tag()]; exist {
-					return cErr.ValidateErr(message)
+					return cErr.New(http.StatusOK, 422, message)
 				}
 			}
 

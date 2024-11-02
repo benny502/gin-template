@@ -8,9 +8,11 @@ import (
 	"bookmark/internal/biz"
 	"bookmark/internal/config"
 	"bookmark/internal/data"
+	"bookmark/internal/grpc"
 	"bookmark/internal/middleware"
 	"bookmark/internal/pkg/log"
 	"bookmark/internal/router"
+	"bookmark/internal/server"
 	"bookmark/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -18,5 +20,5 @@ import (
 )
 
 func wireApp(conf *config.Configuration, opts ...gin.OptionFunc) (*App, func(), error) {
-	panic(wire.Build(gin.Default, NewApp, log.NewLogger, router.NewRouter, middleware.ProviderSet, service.ProviderSet, biz.ProviderSet, data.ProviderSet))
+	panic(wire.Build(gin.Default, NewApp, log.NewLogger, router.NewRouter, server.ProviderSet, middleware.ProviderSet, service.ProviderSet, biz.ProviderSet, data.ProviderSet, grpc.ProviderSet))
 }

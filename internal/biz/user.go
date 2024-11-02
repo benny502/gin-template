@@ -4,9 +4,13 @@ import (
 	"bookmark/internal/config"
 	"bookmark/internal/domain"
 	"bookmark/internal/entity"
+	cErr "bookmark/internal/pkg/error"
 	"bookmark/internal/pkg/jwt"
 	"errors"
+	"net/http"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserRepo interface {
@@ -22,10 +26,13 @@ type UserBiz struct {
 func (u *UserBiz) Login(username string, password string) (*domain.User, error) {
 	user, err := u.userRepo.FindUserByUsername(username)
 	if err != nil {
-		return nil, errors.New("用户不存在")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, cErr.New(http.StatusOK, 404, "用户不存在")
+		}
+		return nil, err
 	}
 	if user.Password != password {
-		return nil, errors.New("密码错误")
+		return nil, cErr.New(http.StatusOK, 422, "密码错误")
 	}
 	return &domain.User{
 		ID:       user.ID,
@@ -37,7 +44,9 @@ func (u *UserBiz) Login(username string, password string) (*domain.User, error) 
 func (u *UserBiz) GetInfo(id int) (*domain.User, error) {
 	user, err := u.userRepo.FindUserById(id)
 	if err != nil {
-		return nil, errors.New("用户不存在")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, cErr.New(http.StatusOK, 404, "用户不存在")
+		}
 	}
 	return &domain.User{
 		ID:       user.ID,

@@ -1,6 +1,22 @@
 GOPATH:=$(shell go env GOPATH)
 VERSION=$(shell git describe --tags --always)
 APP_MAIN_DIR=cmd/app
+API_PROTO_FILES=$(shell find api -name *.proto)
+
+.PHONY: init
+# init env
+init:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
+
+.PHONY: api
+# generate api proto
+api:
+	protoc --proto_path=./api \
+		   --go_out=paths=source_relative:./api \
+		   --go-grpc_out=paths=source_relative:./api \
+		   $(API_PROTO_FILES)
 
 .PHONY: run
 # run

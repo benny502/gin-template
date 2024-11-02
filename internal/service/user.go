@@ -19,7 +19,7 @@ type UserService struct {
 func (s *UserService) Login(context *gin.Context) {
 
 	var form v1.Login
-	if err := context.ShouldBindQuery(&form); err != nil {
+	if err := context.ShouldBindBodyWithJSON(&form); err != nil {
 		response.FailByErr(context, request.GetError(&form, err))
 		return
 	}
@@ -35,13 +35,8 @@ func (s *UserService) Login(context *gin.Context) {
 
 func (s *UserService) GetInfo(context *gin.Context) {
 
-	var form v1.GetInfo
-	if err := context.ShouldBindQuery(&form); err != nil {
-		response.FailByErr(context, request.GetError(&form, err))
-		return
-	}
-
-	u, err := s.userRepo.GetInfo(form.ID)
+	id := context.GetInt("id")
+	u, err := s.userRepo.GetInfo(id)
 	if err != nil {
 		response.FailByErr(context, err)
 		return

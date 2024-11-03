@@ -6,6 +6,8 @@ import (
 
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -37,10 +39,26 @@ func GetError(request interface{}, err error) *cErr.Error {
 				}
 			}
 
-			return cErr.ValidateErr(v.Error())
+			return cErr.New(http.StatusOK, 422, v.Error())
 
 		}
 
 	}
-	return cErr.ValidateErr("Parameter error")
+	return cErr.New(http.StatusOK, 422, "Parameter error")
+}
+
+func ShouldBindWith(c *gin.Context, obj any, b binding.Binding) error {
+	err := c.ShouldBindWith(obj, b)
+	if err != nil {
+		return GetError(obj, err)
+	}
+	return nil
+}
+
+func ShouldBindWithQuery(c *gin.Context, obj any) error {
+	return ShouldBindWith(c, obj, binding.Query)
+}
+
+func ShouldBindWithJSON(c *gin.Context, obj any) error {
+	return ShouldBindWith(c, obj, binding.JSON)
 }

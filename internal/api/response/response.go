@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"bookmark/internal/middleware/log"
 	cErr "bookmark/internal/pkg/error"
 )
 
@@ -13,6 +14,8 @@ type Response struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
+
+type EmptyBody map[string]interface{}
 
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Response{
@@ -24,6 +27,8 @@ func Success(c *gin.Context, data interface{}) {
 }
 
 func Fail(c *gin.Context, httpCode int, code int, message string) {
+	logger := log.WithContext(c)
+	logger.Errorf("fail: %d %s", code, message)
 	c.JSON(httpCode, Response{
 		Code:    code,
 		Message: message,

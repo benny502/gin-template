@@ -22,8 +22,16 @@ func (s *GrpcServer) Run() error {
 	if err != nil {
 		return err
 	}
+
+	defer listen.Close()
+
 	s.logger.Infof("grpc server listening on %s", s.conf.App.GrpcPort)
 	return s.server.Serve(listen)
+}
+
+func (s *GrpcServer) Stop() error {
+	s.server.Stop()
+	return nil
 }
 
 func NewGrpcServer(conf *config.Configuration, hello *service.HelloService, logger log.Logger) *GrpcServer {

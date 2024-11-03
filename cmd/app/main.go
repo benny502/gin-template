@@ -2,6 +2,7 @@ package main
 
 import (
 	"bookmark/internal/config"
+	"bookmark/internal/middleware/cache"
 	"flag"
 
 	"github.com/spf13/viper"
@@ -9,7 +10,6 @@ import (
 
 var (
 	flagconf string
-	flagport string
 )
 
 func init() {
@@ -22,10 +22,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	app, cleanup, err := wireApp(conf)
+	cache := cache.NewCache(cache.NewNoCache())
+	app, cleanup, err := wireApp(conf, cache)
 	if err != nil {
 		panic(err)
 	}
 	defer cleanup()
-	app.Run() // listen and serve on 0.0.0.0:8080
+	if err := app.Run(); err != nil {
+		panic(err)
+	} // listen and serve on 0.0.0.0:8080
 }

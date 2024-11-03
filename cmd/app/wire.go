@@ -10,6 +10,7 @@ import (
 	"bookmark/internal/data"
 	"bookmark/internal/grpc"
 	"bookmark/internal/middleware"
+	"bookmark/internal/middleware/cache"
 	"bookmark/internal/pkg/log"
 	"bookmark/internal/router"
 	"bookmark/internal/server"
@@ -19,6 +20,6 @@ import (
 	"github.com/google/wire"
 )
 
-func wireApp(conf *config.Configuration, opts ...gin.OptionFunc) (*App, func(), error) {
+func wireApp(conf *config.Configuration, cache *cache.Cache, opts ...gin.OptionFunc) (*App, func(), error) {
 	panic(wire.Build(gin.Default, NewApp, log.NewLogger, router.NewRouter, server.ProviderSet, middleware.ProviderSet, service.ProviderSet, biz.ProviderSet, data.ProviderSet, grpc.ProviderSet))
 }

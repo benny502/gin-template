@@ -4,13 +4,13 @@ import (
 	"bookmark/internal/config"
 	"bookmark/internal/pkg/log"
 	"bookmark/internal/server"
-	"runtime"
+	"context"
+	"errors"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"golang.org/x/sync/errgroup"
-)
-
-var (
-	g errgroup.Group
 )
 
 type App struct {
@@ -19,25 +19,33 @@ type App struct {
 	servers []server.Server
 }
 
-func (a *App) Run() {
+func (a *App) Run() error {
+	g, ctx := errgroup.WithContext(context.Background())
 
 	for _, srv := range a.servers {
 		g.Go(func() error {
-			defer func() {
-				if err := recover(); err != nil {
-					buf := make([]byte, 64<<10) //nolint:gomnd
-					n := runtime.Stack(buf, false)
-					buf = buf[:n]
-					a.logger.Errorf("%v:\n%s\n", err, buf)
-					panic(err)
-				}
-			}()
 			return srv.Run()
 		})
 	}
-	if err := g.Wait(); err != nil {
-		a.logger.Error(err)
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
+
+	select {
+	case <-ctx.Done():
+		a.logger.Info("canceled or expired")
+	case sig := <-sigChan:
+		a.logger.Infof("signal: %s", sig)
+		for _, srv := range a.servers {
+			srv.Stop()
+		}
 	}
+
+	if err := g.Wait(); err != nil && !errors.Is(err, context.Canceled) {
+		a.logger.Error(err)
+		return err
+	}
+	return nil
 }
 
 func (a *App) Register(server server.Server) {

@@ -11,7 +11,10 @@ import (
 	"bookmark/internal/config"
 	"bookmark/internal/data"
 	"bookmark/internal/grpc"
-	"bookmark/internal/middleware"
+	"bookmark/internal/middleware/auth"
+	"bookmark/internal/middleware/cache"
+	"bookmark/internal/middleware/cors"
+	log2 "bookmark/internal/middleware/log"
 	"bookmark/internal/pkg/log"
 	"bookmark/internal/router"
 	"bookmark/internal/server"
@@ -21,28 +24,29 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(conf *config.Configuration, opts ...gin.OptionFunc) (*App, func(), error) {
+func wireApp(conf *config.Configuration, cache2 *cache.Cache, opts ...gin.OptionFunc) (*App, func(), error) {
 	engine := gin.Default(opts...)
-	auth := middleware.NewAuth(conf)
-	cors := middleware.NewCors()
+	authAuth := auth.NewAuth(conf)
+	corsCors := cors.NewCors()
 	logger, err := log.NewLogger(conf)
 	if err != nil {
 		return nil, nil, err
 	}
+	logLogger := log2.NewLogger(logger)
 	dataData, cleanup, err := data.NewData(conf)
 	if err != nil {
 		return nil, nil, err
 	}
-	classRepo := data.NewClassRepo(dataData)
+	classRepo := data.NewClassRepo(dataData, logger)
 	classBiz := biz.NewClassBiz(classRepo)
 	classService := service.NewClassService(logger, classBiz)
-	itemRepo := data.NewItemRepo(dataData)
+	itemRepo := data.NewItemRepo(dataData, logger)
 	itemBiz := biz.NewItemBiz(itemRepo, classRepo)
 	itemService := service.NewItemService(logger, itemBiz)
-	userRepo := data.NewUserRepo(dataData)
+	userRepo := data.NewUserRepo(dataData, logger)
 	userBiz := biz.NewUserBiz(userRepo, conf)
 	userService := service.NewUserService(logger, userBiz, conf)
-	routerRouter := router.NewRouter(engine, auth, cors, classService, itemService, userService, logger)
+	routerRouter := router.NewRouter(engine, authAuth, corsCors, logLogger, cache2, classService, itemService, userService, logger)
 	httpServer := server.NewHttpServer(engine, routerRouter, conf, logger)
 	helloService := grpc.NewHelloService()
 	grpcServer := server.NewGrpcServer(conf, helloService, logger)

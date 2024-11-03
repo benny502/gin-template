@@ -1,5 +1,11 @@
 package middleware
 
-import "github.com/google/wire"
+import (
+	"bookmark/internal/middleware/auth"
+	"bookmark/internal/middleware/cors"
+	"bookmark/internal/middleware/log"
 
-var ProviderSet = wire.NewSet(NewAuth, NewCors)
+	"github.com/google/wire"
+)
+
+var ProviderSet = wire.NewSet(auth.NewAuth, cors.NewCors, log.NewLogger)

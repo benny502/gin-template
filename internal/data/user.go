@@ -3,32 +3,56 @@ package data
 import (
 	"bookmark/internal/biz"
 	"bookmark/internal/entity"
+	"bookmark/internal/pkg/gosafe"
+	"bookmark/internal/pkg/log"
 )
 
 type userRepo struct {
-	data *Data
+	data   *Data
+	logger log.Logger
 }
 
 func (u *userRepo) FindUserByUsername(username string) (*entity.User, error) {
-	var user entity.User
-	err := u.data.db.Where("username = ? and is_delete = ?", username, 0).First(&user).Error
-	if err != nil {
+	errChan := make(chan error)
+	resChan := make(chan *entity.User)
+	gosafe.GoSafe(func() {
+		var user entity.User
+		err := u.data.db.Where("username = ? and is_delete = ?", username, 0).First(&user).Error
+		if err != nil {
+			errChan <- err
+			return
+		}
+		resChan <- &user
+	}, u.logger)
+	select {
+	case user := <-resChan:
+		return user, nil
+	case err := <-errChan:
 		return nil, err
 	}
-	return &user, nil
 }
 
 func (u *userRepo) FindUserById(id int) (*entity.User, error) {
-	var user entity.User
-	err := u.data.db.Where("id = ? and is_delete = ?", id, 0).First(&user).Error
-	if err != nil {
+	resChan := make(chan *entity.User)
+	errChan := make(chan error)
+	gosafe.GoSafe(func() {
+		var user entity.User
+		err := u.data.db.Where("id = ? and is_delete = ?", id, 0).First(&user).Error
+		if err != nil {
+			errChan <- err
+		}
+		resChan <- &user
+	}, u.logger)
+	select {
+	case user := <-resChan:
+		return user, nil
+	case err := <-errChan:
 		return nil, err
 	}
-	return &user, nil
 }
 
-func NewUserRepo(data *Data) biz.UserRepo {
-	return &userRepo{data: data}
+func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
+	return &userRepo{data: data, logger: logger}
 }
 
 var _ biz.UserRepo = (*userRepo)(nil)

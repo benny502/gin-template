@@ -14,8 +14,6 @@ func (l *Login) GetMessages() request.ValidatorMessages {
 	}
 }
 
-var _ request.Validator = (*Login)(nil)
-
 type GetInfo struct {
 	ID int `json:"id" form:"id" binding:"required"`
 }

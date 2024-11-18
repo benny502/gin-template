@@ -5,6 +5,8 @@ import (
 	"bookmark/internal/entity"
 	"bookmark/internal/pkg/gosafe"
 	"bookmark/internal/pkg/log"
+
+	"github.com/gin-gonic/gin"
 )
 
 type userRepo struct {
@@ -12,10 +14,10 @@ type userRepo struct {
 	logger log.Logger
 }
 
-func (u *userRepo) FindUserByUsername(username string) (*entity.User, error) {
+func (u *userRepo) FindUserByUsername(ctx *gin.Context, username string) (*entity.User, error) {
 	errChan := make(chan error)
 	resChan := make(chan *entity.User)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		var user entity.User
 		err := u.data.db.Where("username = ? and is_delete = ?", username, 0).First(&user).Error
 		if err != nil {
@@ -23,7 +25,7 @@ func (u *userRepo) FindUserByUsername(username string) (*entity.User, error) {
 			return
 		}
 		resChan <- &user
-	}, u.logger)
+	})
 	select {
 	case user := <-resChan:
 		return user, nil
@@ -32,17 +34,17 @@ func (u *userRepo) FindUserByUsername(username string) (*entity.User, error) {
 	}
 }
 
-func (u *userRepo) FindUserById(id int) (*entity.User, error) {
+func (u *userRepo) FindUserById(ctx *gin.Context, id int) (*entity.User, error) {
 	resChan := make(chan *entity.User)
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		var user entity.User
 		err := u.data.db.Where("id = ? and is_delete = ?", id, 0).First(&user).Error
 		if err != nil {
 			errChan <- err
 		}
 		resChan <- &user
-	}, u.logger)
+	})
 	select {
 	case user := <-resChan:
 		return user, nil

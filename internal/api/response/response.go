@@ -23,18 +23,16 @@ func Success(c *gin.Context, data interface{}) {
 		Message: "success",
 		Data:    data,
 	})
-	c.Abort()
 }
 
 func Fail(c *gin.Context, httpCode int, code int, message string) {
-	logger := log.WithContext(c)
+	logger := log.FromContext(c)
 	logger.Errorf("fail: %d %s", code, message)
 	c.JSON(httpCode, Response{
 		Code:    code,
 		Message: message,
 		Data:    nil,
 	})
-	c.Abort()
 }
 
 func ServerError(c *gin.Context, err interface{}) {

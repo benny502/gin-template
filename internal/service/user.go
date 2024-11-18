@@ -24,7 +24,7 @@ func (s *UserService) Login(context *gin.Context) {
 		return
 	}
 
-	u, err := s.userRepo.Login(form.Username, form.Password)
+	u, err := s.userRepo.Login(context, form.Username, form.Password)
 	if err != nil {
 		response.FailByErr(context, err)
 		return
@@ -36,7 +36,7 @@ func (s *UserService) Login(context *gin.Context) {
 func (s *UserService) GetInfo(context *gin.Context) {
 
 	id := context.GetInt("id")
-	u, err := s.userRepo.GetInfo(id)
+	u, err := s.userRepo.GetInfo(context, id)
 	if err != nil {
 		response.FailByErr(context, err)
 		return

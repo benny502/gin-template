@@ -16,7 +16,7 @@ type ItemService struct {
 }
 
 func (i *ItemService) ListByClass(c *gin.Context) {
-	list, err := i.itemBiz.ListByClass()
+	list, err := i.itemBiz.ListByClass(c)
 	if err != nil {
 		response.FailByErr(c, err)
 		return
@@ -31,7 +31,7 @@ func (i *ItemService) Add(c *gin.Context) {
 		response.FailByErr(c, request.GetError(&item, err))
 		return
 	}
-	id, err := i.itemBiz.Add(item.Title, item.Url, item.ClassId, item.Description)
+	id, err := i.itemBiz.Add(c, item.Title, item.Url, item.ClassId, item.Description)
 	if err != nil {
 		response.FailByErr(c, err)
 		return
@@ -46,7 +46,7 @@ func (i *ItemService) Update(c *gin.Context) {
 		response.FailByErr(c, err)
 		return
 	}
-	err = i.itemBiz.Update(item.Id, item.Title, item.Url, item.ClassId, item.Description)
+	err = i.itemBiz.Update(c, item.Id, item.Title, item.Url, item.ClassId, item.Description)
 	if err != nil {
 		response.FailByErr(c, err)
 		return
@@ -61,7 +61,7 @@ func (i *ItemService) Delete(c *gin.Context) {
 		response.FailByErr(c, err)
 		return
 	}
-	err = i.itemBiz.Delete(req.Id)
+	err = i.itemBiz.Delete(c, req.Id)
 	if err != nil {
 		response.FailByErr(c, err)
 		return
@@ -76,7 +76,7 @@ func (i *ItemService) Get(c *gin.Context) {
 		response.FailByErr(c, err)
 		return
 	}
-	item, err := i.itemBiz.FindById(req.Id)
+	item, err := i.itemBiz.FindById(c, req.Id)
 	if err != nil {
 		response.FailByErr(c, err)
 		return

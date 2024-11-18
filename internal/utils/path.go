@@ -15,7 +15,7 @@ func RootPath() string {
 		panic(err)
 	}
 
-	rootDir = filepath.Dir(filepath.Dir(exePath))
+	rootDir = filepath.Dir(exePath)
 
 	tmpDir := os.TempDir()
 	if strings.Contains(exePath, tmpDir) {

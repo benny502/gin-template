@@ -22,6 +22,10 @@ func NewLogger(logger log.Logger) *Logger {
 	}
 }
 
-func WithContext(ctx *gin.Context) log.Logger {
-	return ctx.MustGet("logger").(log.Logger)
+func FromContext(ctx *gin.Context) log.Logger {
+	logger, ok := ctx.Get("logger")
+	if !ok {
+		return nil
+	}
+	return logger.(log.Logger)
 }

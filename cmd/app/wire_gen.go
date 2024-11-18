@@ -33,7 +33,8 @@ func wireApp(conf *config.Configuration, cache2 *cache.Cache, opts ...gin.Option
 		return nil, nil, err
 	}
 	logLogger := log2.NewLogger(logger)
-	dataData, cleanup, err := data.NewData(conf)
+	writer := log.NewWriter(conf)
+	dataData, cleanup, err := data.NewData(conf, writer)
 	if err != nil {
 		return nil, nil, err
 	}

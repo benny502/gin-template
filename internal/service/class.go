@@ -14,7 +14,7 @@ type ClassService struct {
 }
 
 func (s *ClassService) List(c *gin.Context) {
-	list, err := s.biz.List()
+	list, err := s.biz.List(c)
 	if err != nil {
 		response.FailByErr(c, err)
 		return

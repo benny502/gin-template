@@ -10,12 +10,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type UserRepo interface {
-	FindUserById(id int) (*entity.User, error)
-	FindUserByUsername(username string) (*entity.User, error)
+	FindUserById(ctx *gin.Context, id int) (*entity.User, error)
+	FindUserByUsername(ctx *gin.Context, username string) (*entity.User, error)
 }
 
 type UserBiz struct {
@@ -23,8 +24,8 @@ type UserBiz struct {
 	conf     *config.Configuration
 }
 
-func (u *UserBiz) Login(username string, password string) (*domain.User, error) {
-	user, err := u.userRepo.FindUserByUsername(username)
+func (u *UserBiz) Login(ctx *gin.Context, username string, password string) (*domain.User, error) {
+	user, err := u.userRepo.FindUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, cErr.New(http.StatusOK, 404, "用户不存在")
@@ -41,8 +42,8 @@ func (u *UserBiz) Login(username string, password string) (*domain.User, error) 
 	}, nil
 }
 
-func (u *UserBiz) GetInfo(id int) (*domain.User, error) {
-	user, err := u.userRepo.FindUserById(id)
+func (u *UserBiz) GetInfo(ctx *gin.Context, id int) (*domain.User, error) {
+	user, err := u.userRepo.FindUserById(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, cErr.New(http.StatusOK, 404, "用户不存在")

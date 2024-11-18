@@ -1,13 +1,15 @@
 package gosafe
 
-import "bookmark/internal/pkg/log"
+import (
+	"github.com/gin-gonic/gin"
+)
 
-func GoSafe(fn func(), logger log.Logger) {
-	go RunSafe(fn, logger)
+func GoSafe(ctx *gin.Context, fn func(ctx *gin.Context)) {
+	go RunSafe(ctx, fn)
 }
 
-func RunSafe(fn func(), logger log.Logger) {
-	defer Recovery(logger)
+func RunSafe(ctx *gin.Context, fn func(ctx *gin.Context)) {
+	defer Recovery(ctx)
 
-	fn()
+	fn(ctx)
 }

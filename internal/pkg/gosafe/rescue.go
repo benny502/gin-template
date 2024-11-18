@@ -1,20 +1,26 @@
 package gosafe
 
 import (
-	"bookmark/internal/pkg/log"
+	"bookmark/internal/middleware/log"
 	"runtime"
+
+	"github.com/gin-gonic/gin"
 )
 
-func Recovery(logger log.Logger, cleanups ...func()) {
+func Recovery(ctx *gin.Context, cleanups ...func()) {
+	logger := log.FromContext(ctx)
+
 	for _, cleanup := range cleanups {
 		cleanup()
 	}
 
-	if p := recover(); p != nil {
-		buf := make([]byte, 64<<10) //nolint:gomnd
-		n := runtime.Stack(buf, false)
-		buf = buf[:n]
-		logger.Errorf("%v:\n%s\n", p, buf)
+	if logger != nil {
+		if p := recover(); p != nil {
+			buf := make([]byte, 64<<10) //nolint:gomnd
+			n := runtime.Stack(buf, false)
+			buf = buf[:n]
+			logger.Errorf("%v:\n%s\n", p, buf)
+		}
 	}
 
 }

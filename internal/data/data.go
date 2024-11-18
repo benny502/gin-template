@@ -5,27 +5,25 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/google/wire"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	path "bookmark/internal/utils"
 )
 
 type Data struct {
-	db   *gorm.DB
-	conf *config.Configuration
+	db     *gorm.DB
+	conf   *config.Configuration
+	writer io.Writer
 }
 
-func NewData(conf *config.Configuration) (*Data, func(), error) {
+func NewData(conf *config.Configuration, writer io.Writer) (*Data, func(), error) {
 
 	data := &Data{
-		conf: conf,
+		conf:   conf,
+		writer: writer,
 	}
 	err := data.Connect()
 	if err != nil {
@@ -47,20 +45,6 @@ func (d *Data) Connect() error {
 }
 
 func (d *Data) logger() logger.Interface {
-	logFileDir := d.conf.Log.Path
-	if !filepath.IsAbs(logFileDir) {
-		logFileDir = filepath.Join(path.RootPath(), logFileDir)
-	}
-
-	if ok, _ := path.Exists(logFileDir); !ok {
-		os.Mkdir(logFileDir, os.ModePerm)
-	}
-
-	now := time.Now().Format("2006-01-02")
-	filename := fmt.Sprintf("%s/logs/%s.log", path.RootPath(), now)
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-	}
 
 	var logLevel logger.LogLevel
 	switch d.conf.Log.Level {
@@ -74,7 +58,7 @@ func (d *Data) logger() logger.Interface {
 		logLevel = logger.Error
 	}
 
-	return logger.New(log.New(io.MultiWriter(f, os.Stdout), "\r\n", log.LstdFlags), logger.Config{
+	return logger.New(log.New(d.writer, "\r\n", log.LstdFlags), logger.Config{
 		SlowThreshold: 100 * time.Millisecond,
 		LogLevel:      logLevel,
 		Colorful:      true,

@@ -7,16 +7,17 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type ItemRepo interface {
-	ListAll() ([]*entity.Item, error)
-	ListByClassId(classId int) ([]*entity.Item, error)
-	Add(title string, url string, classId int, description string) (int, error)
-	Update(id int, title string, url string, classId int, description string) error
-	FindById(id int) (*entity.Item, error)
-	Delete(id int) error
+	ListAll(ctx *gin.Context) ([]*entity.Item, error)
+	ListByClassId(ctx *gin.Context, classId int) ([]*entity.Item, error)
+	Add(ctx *gin.Context, title string, url string, classId int, description string) (int, error)
+	Update(ctx *gin.Context, id int, title string, url string, classId int, description string) error
+	FindById(ctx *gin.Context, id int) (*entity.Item, error)
+	Delete(ctx *gin.Context, id int) error
 }
 
 type ItemBiz struct {
@@ -24,14 +25,14 @@ type ItemBiz struct {
 	classRepo ClassRepo
 }
 
-func (i *ItemBiz) ListByClass() ([]*domain.Class, error) {
-	class, err := i.classRepo.ListAll()
+func (i *ItemBiz) ListByClass(ctx *gin.Context) ([]*domain.Class, error) {
+	class, err := i.classRepo.ListAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 	result := make([]*domain.Class, 0)
 	for _, v := range class {
-		items, err := i.itemRepo.ListByClassId(v.ID)
+		items, err := i.itemRepo.ListByClassId(ctx, v.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -55,20 +56,20 @@ func (i *ItemBiz) ListByClass() ([]*domain.Class, error) {
 	return result, nil
 }
 
-func (i *ItemBiz) Add(title string, url string, classId int, description string) (int, error) {
-	return i.itemRepo.Add(title, url, classId, description)
+func (i *ItemBiz) Add(ctx *gin.Context, title string, url string, classId int, description string) (int, error) {
+	return i.itemRepo.Add(ctx, title, url, classId, description)
 }
 
-func (i *ItemBiz) Update(id int, title string, url string, classId int, description string) error {
-	return i.itemRepo.Update(id, title, url, classId, description)
+func (i *ItemBiz) Update(ctx *gin.Context, id int, title string, url string, classId int, description string) error {
+	return i.itemRepo.Update(ctx, id, title, url, classId, description)
 }
 
-func (i *ItemBiz) Delete(id int) error {
-	return i.itemRepo.Delete(id)
+func (i *ItemBiz) Delete(ctx *gin.Context, id int) error {
+	return i.itemRepo.Delete(ctx, id)
 }
 
-func (i *ItemBiz) FindById(id int) (*domain.Item, error) {
-	item, err := i.itemRepo.FindById(id)
+func (i *ItemBiz) FindById(ctx *gin.Context, id int) (*domain.Item, error) {
+	item, err := i.itemRepo.FindById(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, cErr.New(http.StatusOK, 404, "item not found")

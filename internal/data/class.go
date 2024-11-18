@@ -5,6 +5,8 @@ import (
 	"bookmark/internal/entity"
 	"bookmark/internal/pkg/gosafe"
 	"bookmark/internal/pkg/log"
+
+	"github.com/gin-gonic/gin"
 )
 
 type classRepo struct {
@@ -12,17 +14,17 @@ type classRepo struct {
 	logger log.Logger
 }
 
-func (c *classRepo) ListAll() ([]*entity.Class, error) {
+func (c *classRepo) ListAll(ctx *gin.Context) ([]*entity.Class, error) {
 	errChan := make(chan error)
 	resChan := make(chan []*entity.Class)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		result := make([]*entity.Class, 0)
 		err := c.data.db.Where("is_delete = ?", 0).Find(&result).Error
 		if err != nil {
 			errChan <- err
 		}
 		resChan <- result
-	}, c.logger)
+	})
 	select {
 	case result := <-resChan:
 		return result, nil

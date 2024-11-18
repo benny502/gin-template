@@ -11,7 +11,7 @@ import (
 	"bookmark/internal/grpc"
 	"bookmark/internal/middleware"
 	"bookmark/internal/middleware/cache"
-	"bookmark/internal/pkg/log"
+	"bookmark/internal/pkg"
 	"bookmark/internal/router"
 	"bookmark/internal/server"
 	"bookmark/internal/service"
@@ -21,5 +21,5 @@ import (
 )
 
 func wireApp(conf *config.Configuration, cache *cache.Cache, opts ...gin.OptionFunc) (*App, func(), error) {
-	panic(wire.Build(gin.Default, NewApp, log.NewLogger, router.NewRouter, server.ProviderSet, middleware.ProviderSet, service.ProviderSet, biz.ProviderSet, data.ProviderSet, grpc.ProviderSet))
+	panic(wire.Build(gin.Default, NewApp, pkg.ProviderSet, router.NewRouter, server.ProviderSet, middleware.ProviderSet, service.ProviderSet, biz.ProviderSet, data.ProviderSet, grpc.ProviderSet))
 }

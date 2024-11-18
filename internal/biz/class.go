@@ -5,19 +5,20 @@ import (
 	"bookmark/internal/entity"
 	"errors"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type ClassRepo interface {
-	ListAll() ([]*entity.Class, error)
+	ListAll(ctx *gin.Context) ([]*entity.Class, error)
 }
 
 type ClassBiz struct {
 	classRepo ClassRepo
 }
 
-func (c *ClassBiz) List() ([]*domain.Class, error) {
-	list, err := c.classRepo.ListAll()
+func (c *ClassBiz) List(ctx *gin.Context) ([]*domain.Class, error) {
+	list, err := c.classRepo.ListAll(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return make([]*domain.Class, 0), nil

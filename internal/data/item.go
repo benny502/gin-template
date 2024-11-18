@@ -5,6 +5,8 @@ import (
 	"bookmark/internal/entity"
 	"bookmark/internal/pkg/gosafe"
 	"bookmark/internal/pkg/log"
+
+	"github.com/gin-gonic/gin"
 )
 
 type itemRepo struct {
@@ -12,17 +14,17 @@ type itemRepo struct {
 	logger log.Logger
 }
 
-func (i *itemRepo) ListAll() ([]*entity.Item, error) {
+func (i *itemRepo) ListAll(ctx *gin.Context) ([]*entity.Item, error) {
 	resChan := make(chan []*entity.Item)
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		result := make([]*entity.Item, 0)
 		err := i.data.db.Where("is_delete = ?", 0).Find(&result).Error
 		if err != nil {
 			errChan <- err
 		}
 		resChan <- result
-	}, i.logger)
+	})
 	select {
 	case result := <-resChan:
 		return result, nil
@@ -31,17 +33,17 @@ func (i *itemRepo) ListAll() ([]*entity.Item, error) {
 	}
 }
 
-func (i *itemRepo) ListByClassId(classId int) ([]*entity.Item, error) {
+func (i *itemRepo) ListByClassId(ctx *gin.Context, classId int) ([]*entity.Item, error) {
 	resChan := make(chan []*entity.Item)
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		result := make([]*entity.Item, 0)
 		err := i.data.db.Where("class_id = ? and is_delete = ?", classId, 0).Find(&result).Error
 		if err != nil {
 			errChan <- err
 		}
 		resChan <- result
-	}, i.logger)
+	})
 	select {
 	case result := <-resChan:
 		return result, nil
@@ -50,10 +52,10 @@ func (i *itemRepo) ListByClassId(classId int) ([]*entity.Item, error) {
 	}
 }
 
-func (i *itemRepo) Add(title string, url string, classId int, description string) (int, error) {
+func (i *itemRepo) Add(ctx *gin.Context, title string, url string, classId int, description string) (int, error) {
 	resChan := make(chan int)
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		item := &entity.Item{
 			Title:       title,
 			Url:         url,
@@ -66,7 +68,7 @@ func (i *itemRepo) Add(title string, url string, classId int, description string
 			return
 		}
 		resChan <- item.ID
-	}, i.logger)
+	})
 	select {
 	case id := <-resChan:
 		return id, nil
@@ -75,10 +77,10 @@ func (i *itemRepo) Add(title string, url string, classId int, description string
 	}
 }
 
-func (i *itemRepo) FindById(id int) (*entity.Item, error) {
+func (i *itemRepo) FindById(ctx *gin.Context, id int) (*entity.Item, error) {
 	resChan := make(chan *entity.Item)
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		var item entity.Item
 		err := i.data.db.Where("id = ? and is_delete = ?", id, 0).First(&item).Error
 		if err != nil {
@@ -86,7 +88,7 @@ func (i *itemRepo) FindById(id int) (*entity.Item, error) {
 			return
 		}
 		resChan <- &item
-	}, i.logger)
+	})
 	select {
 	case item := <-resChan:
 		return item, nil
@@ -95,9 +97,9 @@ func (i *itemRepo) FindById(id int) (*entity.Item, error) {
 	}
 }
 
-func (i *itemRepo) Update(id int, title string, url string, classId int, description string) error {
+func (i *itemRepo) Update(ctx *gin.Context, id int, title string, url string, classId int, description string) error {
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(ctx *gin.Context) {
 		errChan <- i.data.db.Save(&entity.Item{
 			ID:          id,
 			Title:       title,
@@ -105,16 +107,16 @@ func (i *itemRepo) Update(id int, title string, url string, classId int, descrip
 			ClassID:     classId,
 			Description: description,
 		}).Error
-	}, i.logger)
+	})
 	return <-errChan
 }
 
-func (i *itemRepo) Delete(id int) error {
+func (i *itemRepo) Delete(ctx *gin.Context, id int) error {
 	errChan := make(chan error)
-	gosafe.GoSafe(func() {
+	gosafe.GoSafe(ctx, func(*gin.Context) {
 		var item entity.Item
 		errChan <- i.data.db.Model(&item).Where("id = ?", id).Update("is_delete", 1).Error
-	}, i.logger)
+	})
 	return <-errChan
 }
 
